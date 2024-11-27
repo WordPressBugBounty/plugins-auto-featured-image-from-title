@@ -3,10 +3,10 @@ Contributors: brochris
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=chris@designsbychris.com
 Author URI: http://designsbychris.com
 Plugin URI: http://designsbychris.com/auto-featured-image-from-title
-Tags: featured image, featured images, generate thumbnail, generate thumbnails, text picture, text pictures, automatic featured image, auto featured image, automatically generate featured image, automatically set featured image
+Tags: featured image, featured images, generate thumbnail, generate thumbnails, automatic featured image
 Requires at least: 3.5
-Tested up to: 6.5.3
-Stable tag: 2.3
+Tested up to: 6.7
+Stable tag: 2.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -75,6 +75,10 @@ No, it will only create featured images for posts that do not have featured imag
 5. The image is automatically set as the featured image
 
 == Changelog ==
+
+= 2.4 =
+* Assured compatibility with WordPress 6.7
+* Fixed miscellaneous bugs in code
 
 = 2.3 =
 * Added option to keep or remove linebreaks when writing text to images

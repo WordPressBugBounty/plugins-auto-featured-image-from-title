@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Auto Featured Image from Title
-Version: 2.3
+Version: 2.4
 Description: Automatically generates an image from the post title and sets it as the featured image
 Author: Chris Huff
 Author URI: http://designsbychris.com
@@ -102,10 +102,12 @@ function auto_featured_image_from_title ($post_id) {
     return;
 
     // Make sure the post text has been given to the post
-    $auto_image_post_title = html_entity_decode(strip_tags(get_the_title($post->ID)),ENT_QUOTES,'UTF-8');
-
+//    $auto_image_post_title = html_entity_decode(strip_tags(get_the_title($post->ID)),ENT_QUOTES,'UTF-8');
+    $auto_image_post_title = html_entity_decode(wp_strip_all_tags(get_the_title($post->ID)),ENT_QUOTES,'UTF-8');
+	
     if($auto_image_text=='content'){
-		$auto_image_post_content = html_entity_decode(strip_tags($post->post_content));
+//		$auto_image_post_content = html_entity_decode(strip_tags($post->post_content));
+		$auto_image_post_content = html_entity_decode(wp_strip_all_tags($post->post_content));
 	  	$auto_image_post_text = $auto_image_post_content;
         }
     elseif($auto_image_text=='excerpt'){
@@ -442,7 +444,8 @@ add_action("add_meta_boxes", "add_afift_meta_box");
 
 function save_afift_meta_box($post_id, $post, $update)
 {
-    if (!isset($_POST["meta-box-nonce"]) || !wp_verify_nonce($_POST["meta-box-nonce"], basename(__FILE__)))
+//    if (!isset($_POST["meta-box-nonce"]) || !wp_verify_nonce($_POST["meta-box-nonce"], basename(__FILE__)))
+    if ((isset($_POST["meta-box-nonce"]) && !wp_verify_nonce(esc_url_raw(wp_unslash($_POST["meta-box-nonce"])), basename(__FILE__))) || null !== $_POST["meta-box-nonce"])
         return $post_id;
 
     if(!current_user_can("edit_post", $post_id))
@@ -456,13 +459,13 @@ function save_afift_meta_box($post_id, $post, $update)
 
     if(isset($_POST["afift-disable"]))
     {
-        $meta_box_checkbox_value = $_POST["afift-disable"];
+        $meta_box_checkbox_value = sanitize_text_field(wp_unslash($_POST["afift-disable"]));
     }   
     update_post_meta($post_id, "afift-disable", $meta_box_checkbox_value);
 	  
     if(isset($_POST["afift-disable-set-first"]))
     {
-        $meta_box_set_first_checkbox_value = $_POST["afift-disable-set-first"];
+        $meta_box_set_first_checkbox_value = sanitize_text_field(wp_unslash($_POST["afift-disable-set-first"]));
     }   
     update_post_meta($post_id, "afift-disable-set-first", $meta_box_set_first_checkbox_value);
 }
@@ -553,7 +556,7 @@ function afift_set_first_image($post_id) {
         $width, $height);
     $new_featured_img = $auto_image;
 
-    $auto_image_post_title = html_entity_decode(strip_tags(get_the_title($post->ID)),ENT_QUOTES,'UTF-8');
+    $auto_image_post_title = html_entity_decode(wp_strip_all_tags(get_the_title($post->ID)),ENT_QUOTES,'UTF-8');
     if($auto_image_post_title == ''){
         $auto_image_post_title = 'image';
 	    }
@@ -610,7 +613,7 @@ add_action( 'wp_insert_post', 'afift_set_first_image', 999999 );
 function afift_enqueue_color_picker( $hook_suffix ) {
     // first check that $hook_suffix is appropriate for your admin page
     wp_enqueue_style( 'wp-color-picker' );
-    wp_enqueue_script( 'auto_featured_image', plugins_url('colorpicker.js', __FILE__ ), array( 'wp-color-picker' ), false, true );
+    wp_enqueue_script( 'auto_featured_image', plugins_url('colorpicker.js', __FILE__ ), array( 'wp-color-picker' ), '2.3', true );
     }
 
 add_action( 'admin_enqueue_scripts', 'afift_enqueue_color_picker' );
@@ -659,7 +662,7 @@ function register_auto_featured_image() {
 add_action('admin_menu', 'afift_settings');
 
 function afift_css_head() {
-    if ((isset($_GET['page'])) && ($_GET['page'] == 'auto-featured-image-from-title.php')){ ?>
+//    if ((isset($_GET['page'])) && ($_GET['page'] == 'auto-featured-image-from-title.php')){ ?>
         <style type="text/css">
         #afift {margin-right:300px;}
         #afift_settings, #afift_info {background-color:#fff;border:#ccc 1px solid; padding:15px;}
@@ -677,7 +680,7 @@ function afift_css_head() {
 		.clear {clear:both;}
 		.left {float:left;}
         </style>
-        <?php }
+        <?php // }
     }
 
 add_action('admin_head', 'afift_css_head');
@@ -742,7 +745,7 @@ function afift_settings_page() {
         <p><label for="auto_image_text_color">Text Color:</label>
         <input name="auto_image_text_color" type="text" value="<?php form_option('auto_image_text_color'); ?>" class="my-color-field" /></p>
 
-        <p><label for="auto_image_fontface">Font: <small class="showfonts">Show fonts<span><img src="<?php echo plugins_url() ?>/auto-featured-image-from-title/images/AguafinaScript.ttf.jpg"><img src="<?php echo plugins_url() ?>/auto-featured-image-from-title/images/ChunkFive.ttf.jpg"><img src="<?php echo plugins_url() ?>/auto-featured-image-from-title/images/LindenHill.ttf.jpg"><img src="<?php echo plugins_url() ?>/auto-featured-image-from-title/images/Raleway.ttf.jpg"></span></small></label>
+        <p><label for="auto_image_fontface">Font: <small class="showfonts">Show fonts<span><img src="<?php echo esc_url(plugins_url()); ?>/auto-featured-image-from-title/images/AguafinaScript.ttf.jpg"><img src="<?php echo esc_url(plugins_url()); ?>/auto-featured-image-from-title/images/ChunkFive.ttf.jpg"><img src="<?php echo esc_url(plugins_url()); ?>/auto-featured-image-from-title/images/LindenHill.ttf.jpg"><img src="<?php echo esc_url(plugins_url()); ?>/auto-featured-image-from-title/images/Raleway.ttf.jpg"></span></small></label>
         <select name="auto_image_fontface" id="auto_image_fontface">
             <option value='AguafinaScript.ttf'<?php if((get_option('auto_image_fontface'))=='AguafinaScript.ttf'){ echo " selected";} ?>>Aguafina Script</option>
             <option value='chunkfive.ttf'<?php if((get_option('auto_image_fontface'))=='chunkfive.ttf'){ echo " selected";} ?>>Chunk Five</option>
@@ -761,17 +764,17 @@ function afift_settings_page() {
     <p><label for="auto_image_bg_color">Background Color:</label>
         <input name="auto_image_bg_color" type="text" value="<?php form_option('auto_image_bg_color'); ?>" class="my-color-field" /></p>
     <p><label for="auto_image_bg_image">Background Image:</label>
-        <span class="bg_group"><img src="<?php echo plugins_url() ?>/auto-featured-image-from-title/images/sunset.jpg.240x120.jpg" width="240" height="120" alt="Sunset" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="sunset.jpg"){echo ' checked="checked"';} ?> value="sunset.jpg" /></span>
-        <span class="bg_group"><img src="<?php echo plugins_url() ?>/auto-featured-image-from-title/images/flower.jpg.240x120.jpg" width="240" height="120" alt="Flower" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="flower.jpg"){echo ' checked="checked"';} ?> value="flower.jpg" /></span>
-        <span class="bg_group"><img src="<?php echo plugins_url() ?>/auto-featured-image-from-title/images/rose.jpg.240x120.jpg" width="240" height="120" alt="Rose" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="rose.jpg"){echo ' checked="checked"';} ?> value="rose.jpg" /></span>
-        <span class="bg_group"><img src="<?php echo plugins_url() ?>/auto-featured-image-from-title/images/book.jpg.240x120.jpg" width="240" height="120" alt="Book" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="book.jpg"){echo ' checked="checked"';} ?> value="book.jpg" /></span>
-        <span class="bg_group"><img src="<?php echo plugins_url() ?>/auto-featured-image-from-title/images/grunge.jpg.240x120.jpg" width="240" height="120" alt="Grunge" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="grunge.jpg"){echo ' checked="checked"';} ?> value="grunge.jpg" /></span>
-        <span class="bg_group"><img src="<?php echo plugins_url() ?>/auto-featured-image-from-title/images/bokeh.jpg.240x120.jpg" width="240" height="120" alt="Bokeh" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="bokeh.jpg"){echo ' checked="checked"';} ?> value="bokeh.jpg" /></span>
-        <span class="bg_group"><img src="<?php echo plugins_url() ?>/auto-featured-image-from-title/images/grass-hill.jpg.240x120.jpg" width="240" height="120" alt="Grass Hill" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="grass-hill.jpg"){echo ' checked="checked"';} ?> value="grass-hill.jpg" /></span>
-        <span class="bg_group"><img src="<?php echo plugins_url() ?>/auto-featured-image-from-title/images/clouds.jpg.240x120.jpg" width="240" height="120" alt="Clouds" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="clouds.jpg"){echo ' checked="checked"';} ?> value="clouds.jpg" /></span>
-        <span class="bg_group"><img src="<?php echo plugins_url() ?>/auto-featured-image-from-title/images/wood.jpg.240x120.jpg" width="240" height="120" alt="Wood" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="wood.jpg"){echo ' checked="checked"';} ?> value="wood.jpg" /></span>
-        <span class="bg_group"><img src="<?php echo plugins_url() ?>/auto-featured-image-from-title/images/bricks.jpg.240x120.jpg" width="240" height="120" alt="Bricks" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="bricks.jpg"){echo ' checked="checked"';} ?> value="bricks.jpg" /></span>
-        <span class="bg_group"><img src="<?php echo plugins_url() ?>/auto-featured-image-from-title/images/blank.jpg.240x120.jpg" width="240" height="120" alt="Blank" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="blank.jpg"){echo ' checked="checked"';} ?> value="blank.jpg" /></span>
+        <span class="bg_group"><img src="<?php echo esc_url(plugins_url()); ?>/auto-featured-image-from-title/images/sunset.jpg.240x120.jpg" width="240" height="120" alt="Sunset" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="sunset.jpg"){echo ' checked="checked"';} ?> value="sunset.jpg" /></span>
+        <span class="bg_group"><img src="<?php echo esc_url(plugins_url()); ?>/auto-featured-image-from-title/images/flower.jpg.240x120.jpg" width="240" height="120" alt="Flower" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="flower.jpg"){echo ' checked="checked"';} ?> value="flower.jpg" /></span>
+        <span class="bg_group"><img src="<?php echo esc_url(plugins_url()); ?>/auto-featured-image-from-title/images/rose.jpg.240x120.jpg" width="240" height="120" alt="Rose" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="rose.jpg"){echo ' checked="checked"';} ?> value="rose.jpg" /></span>
+        <span class="bg_group"><img src="<?php echo esc_url(plugins_url()); ?>/auto-featured-image-from-title/images/book.jpg.240x120.jpg" width="240" height="120" alt="Book" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="book.jpg"){echo ' checked="checked"';} ?> value="book.jpg" /></span>
+        <span class="bg_group"><img src="<?php echo esc_url(plugins_url()); ?>/auto-featured-image-from-title/images/grunge.jpg.240x120.jpg" width="240" height="120" alt="Grunge" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="grunge.jpg"){echo ' checked="checked"';} ?> value="grunge.jpg" /></span>
+        <span class="bg_group"><img src="<?php echo esc_url(plugins_url()); ?>/auto-featured-image-from-title/images/bokeh.jpg.240x120.jpg" width="240" height="120" alt="Bokeh" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="bokeh.jpg"){echo ' checked="checked"';} ?> value="bokeh.jpg" /></span>
+        <span class="bg_group"><img src="<?php echo esc_url(plugins_url()); ?>/auto-featured-image-from-title/images/grass-hill.jpg.240x120.jpg" width="240" height="120" alt="Grass Hill" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="grass-hill.jpg"){echo ' checked="checked"';} ?> value="grass-hill.jpg" /></span>
+        <span class="bg_group"><img src="<?php echo esc_url(plugins_url()); ?>/auto-featured-image-from-title/images/clouds.jpg.240x120.jpg" width="240" height="120" alt="Clouds" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="clouds.jpg"){echo ' checked="checked"';} ?> value="clouds.jpg" /></span>
+        <span class="bg_group"><img src="<?php echo esc_url(plugins_url()); ?>/auto-featured-image-from-title/images/wood.jpg.240x120.jpg" width="240" height="120" alt="Wood" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="wood.jpg"){echo ' checked="checked"';} ?> value="wood.jpg" /></span>
+        <span class="bg_group"><img src="<?php echo esc_url(plugins_url()); ?>/auto-featured-image-from-title/images/bricks.jpg.240x120.jpg" width="240" height="120" alt="Bricks" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="bricks.jpg"){echo ' checked="checked"';} ?> value="bricks.jpg" /></span>
+        <span class="bg_group"><img src="<?php echo esc_url(plugins_url()); ?>/auto-featured-image-from-title/images/blank.jpg.240x120.jpg" width="240" height="120" alt="Blank" /><br /><input type="radio" id="auto_image_bg_image" name="auto_image_bg_image"<?php if(get_option('auto_image_bg_image')=="blank.jpg"){echo ' checked="checked"';} ?> value="blank.jpg" /></span>
     </p>
     <p class="clear"><input type="checkbox" class="left" name="auto_image_set_first" value="yes"<?php if(get_option("auto_image_set_first")=='yes'){ echo ' checked="checked"';} ?> /><label for="auto_image_set_first">Set the first image in a post as the featured image</label></p>
     <p><input type="submit" value="Save Changes" /></p>
@@ -784,9 +787,6 @@ function afift_settings_page() {
 
     <strong><a href="http://designsbychris.com/auto-featured-image-from-title/">Purchase the PRO version</a>!</strong>
     <p><strong>Use discount code LITE2PRO for 30% off!</strong></p>
-    <p><strong><?php if( (date('Y')<2017) && (date('n')<9)){ ?>
-	  Or, take this <a href="https://www.murvey.com/s?56db1e54c28de3cd049f90b2">limited-time survey</a> to receive 70% off, the biggest discount we'll ever offer! <em>Survey closes August 31, 2016.</em>
-	  <?php } ?></strong></p>
 	<p>The PRO version allows you to customize the featured image even more! The PRO version includes many more features and options, including the ability to upload your own fonts and background images, or use a random Flickr photo for your featured image. <a href="http://designsbychris.com/auto-featured-image-from-title/">Check it out</a>!</p>
 
     <hr />
@@ -828,12 +828,9 @@ function afift_lite_admin_notice() {
         if ( !get_user_meta($user_id, 'afift_lite2pro_ignore_notice4') ) {
             $url = add_query_arg(array('afift_lite2pro_ignore_notice4'=>'0',));
             echo '<div class="updated"><p>';
-            echo '<a href="' . $url . '" style="float:right;" rel="nofollow">Hide Notice</a>            <strong>Thanks for using Auto Featured Image from Title LITE!</strong><br />'; ?>
+            echo '<a href="' . esc_url($url) . '" style="float:right;" rel="nofollow">Hide Notice</a>            <strong>Thanks for using Auto Featured Image from Title LITE!</strong><br />'; ?>
             Use discount code LITE2PRO to get 30&#37; off the <a href="http://designsbychris.com/auto-featured-image-from-title">PRO version</a>!<br />
-            <?php if( (date('Y')<2017) && (date('n')<9)){ ?>
-            Or, take this <a href="https://www.murvey.com/s?56db1e54c28de3cd049f90b2">limited-time survey</a> to <strong>receive 70% off</strong>, the greatest discount we'll ever offer! <em>Survey closes August 31, 2016.</em><br />
-            <?php }else{ ?>
-            <?php } echo '</p></div>';
+            <?php echo '</p></div>';
             }
         }
     }
@@ -845,9 +842,9 @@ function afift_lite_notice_ignore() {
     $user_id = $current_user->ID;
 
     // If user clicks to ignore the notice, add that to their user meta
-    if ( isset($_GET['afift_lite2pro_ignore_notice4']) && '0' == $_GET['afift_lite2pro_ignore_notice4'] ) {
+//    if ( isset($_GET['afift_lite2pro_ignore_notice4']) && '0' == $_GET['afift_lite2pro_ignore_notice4'] ) {
         add_user_meta($user_id, 'afift_lite2pro_ignore_notice4', 'true', true);
-        }
+//        }
     }
 add_action('admin_init', 'afift_lite_notice_ignore');
 
